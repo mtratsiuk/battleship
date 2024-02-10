@@ -99,9 +99,7 @@ class BattleshipField(
         }
     }
 
-    fun isAlive(): Boolean {
-        return hits.size < BattleshipTilesToHitCount
-    }
+    fun hasAliveShips(): Boolean = hits.size < BattleshipTilesToHitCount
 
     fun strikeAt(pos: BattleshipPos) {
         require(pos.x in 0..<BattleshipFieldSize && pos.y in 0..<BattleshipFieldSize) {
