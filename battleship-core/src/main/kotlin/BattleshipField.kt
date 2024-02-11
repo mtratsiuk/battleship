@@ -13,7 +13,6 @@ enum class BattleshipType(val size: Int) {
     BATTLESHIP(4),
     CARRIER(5)
 }
-
 fun BattleshipType.toConsoleView(): String {
     return when (this) {
         BattleshipType.PATROL_BOAT -> "P"
