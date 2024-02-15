@@ -49,6 +49,8 @@ class BattleshipGame(
     var state: BattleshipState = BattleshipStateAwaitingField(player1Id)
 
     fun accept(action: BattleshipAction) {
+        println("$gameId: $action")
+
         when (action) {
             is BattleshipActionField -> {
                 assertState<BattleshipStateAwaitingField> { state ->
@@ -102,9 +104,9 @@ class BattleshipGame(
         }
     }
 
-    private fun otherPlayerId(playerId: BattleshipPlayerId) = if (playerId == player1Id) player2Id else player1Id
+    fun otherPlayerId(playerId: BattleshipPlayerId) = if (playerId == player1Id) player2Id else player1Id
 
-    private fun playerField(playerId: BattleshipPlayerId) = if (playerId == player1Id) player1Field else player2Field
+    fun playerField(playerId: BattleshipPlayerId) = if (playerId == player1Id) player1Field else player2Field
 
     private inline fun <reified T : BattleshipState> assertState(assertPlayerId: (T) -> Unit) {
         require(state is T) { "Expected current game state to be ${typeOf<T>()}, got $state" }

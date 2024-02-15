@@ -1,10 +1,15 @@
 package dev.spris.battleship.server.repository
 
 import dev.spris.battleship.core.BattleshipPlayerId
-import dev.spris.battleship.server.model.Player
 import org.springframework.stereotype.Repository
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+
+data class Player(
+    val id: BattleshipPlayerId,
+    val addr: String,
+    val name: String,
+)
 
 interface PlayerRepository {
     suspend fun create(addr: String, name: String): Player
