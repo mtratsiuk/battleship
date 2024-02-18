@@ -1,10 +1,8 @@
 package dev.spris.battleship.core
 
-
 private const val BattleshipFieldSize = 10
 private val BattleshipTypesCount = enumValues<BattleshipType>().size
 private val BattleshipTilesToHitCount = enumValues<BattleshipType>().fold(0) { r, c -> r + c.size }
-
 
 enum class BattleshipType(val size: Int) {
     PATROL_BOAT(2),
@@ -13,6 +11,7 @@ enum class BattleshipType(val size: Int) {
     BATTLESHIP(4),
     CARRIER(5)
 }
+
 fun BattleshipType.toConsoleView(): String {
     return when (this) {
         BattleshipType.PATROL_BOAT -> "P"
@@ -24,10 +23,14 @@ fun BattleshipType.toConsoleView(): String {
 }
 
 sealed interface BattleshipTile
+
 data object BattleshipEmptyTile : BattleshipTile
+
 class BattleshipShipTile(val shipType: BattleshipType) : BattleshipTile
 
-data class BattleshipPos(val x: Int, val y: Int)
+data class BattleshipPos(val x: Int, val y: Int) {
+    override fun toString() = "Pos[$x,$y]"
+}
 
 class BattleshipField(
     val field: Array<Array<BattleshipTile>>,
@@ -37,7 +40,9 @@ class BattleshipField(
     companion object {
         fun fromShips(vararg ships: Pair<BattleshipType, List<BattleshipPos>>): BattleshipField {
             val field =
-                Array(BattleshipFieldSize) { Array<BattleshipTile>(BattleshipFieldSize) { BattleshipEmptyTile } }
+                Array(BattleshipFieldSize) {
+                    Array<BattleshipTile>(BattleshipFieldSize) { BattleshipEmptyTile }
+                }
 
             for ((shipType, positions) in ships) {
                 for ((x, y) in positions) {
@@ -54,14 +59,18 @@ class BattleshipField(
     }
 
     init {
-        require(field.size == BattleshipFieldSize) { "Expected field rows count to be ${BattleshipFieldSize}, got ${field.size}" }
+        require(field.size == BattleshipFieldSize) {
+            "Expected field rows count to be ${BattleshipFieldSize}, got ${field.size}"
+        }
 
         val ships = mutableMapOf<BattleshipType, List<BattleshipPos>>()
 
-        for (y in 0..<BattleshipFieldSize) {
-            require(field[y].size == BattleshipFieldSize) { "Expected field columns count to be ${BattleshipFieldSize}, got ${field.size}" }
+        for (y in 0 ..< BattleshipFieldSize) {
+            require(field[y].size == BattleshipFieldSize) {
+                "Expected field columns count to be ${BattleshipFieldSize}, got ${field.size}"
+            }
 
-            for (x in 0..<BattleshipFieldSize) {
+            for (x in 0 ..< BattleshipFieldSize) {
                 val tile = field[y][x]
 
                 if (tile is BattleshipShipTile) {
@@ -70,30 +79,49 @@ class BattleshipField(
             }
         }
 
-        require(enumValues<BattleshipType>().all { ships.contains(it) }) { "Expected ${enumValues<BattleshipType>().asList()} to be present, got ${ships.keys}" }
-        require(ships.size == BattleshipTypesCount) { "Expected $BattleshipTypesCount ships to be present" }
+        require(enumValues<BattleshipType>().all { ships.contains(it) }) {
+            "Expected ${enumValues<BattleshipType>().asList()} to be present, got ${ships.keys}"
+        }
+        require(ships.size == BattleshipTypesCount) {
+            "Expected $BattleshipTypesCount ships to be present"
+        }
 
         for ((shipType, positions) in ships) {
-            require(positions.size == shipType.size) { "Expected $shipType to have ${shipType.size} tiles, got ${positions.size}" }
+            require(positions.size == shipType.size) {
+                "Expected $shipType to have ${shipType.size} tiles, got ${positions.size}"
+            }
 
             when {
                 positions[0].x + 1 == positions[1].x -> {
-                    require(positions.dropLast(1).withIndex().all {
-                        it.value.x + 1 == positions[it.index + 1].x
-                    }) { "Expected all $shipType's tiles to be sequential" }
+                    require(
+                        positions.dropLast(1).withIndex().all {
+                            it.value.x + 1 == positions[it.index + 1].x
+                        }
+                    ) {
+                        "Expected all $shipType's tiles to be sequential"
+                    }
 
-                    require(positions.all { it.y == positions[0].y }) { "Expected all $shipType's tiles to be horizontal" }
+                    require(positions.all { it.y == positions[0].y }) {
+                        "Expected all $shipType's tiles to be horizontal"
+                    }
                 }
-
                 positions[0].y + 1 == positions[1].y -> {
-                    require(positions.dropLast(1).withIndex().all {
-                        it.value.y + 1 == positions[it.index + 1].y
-                    }) { "Expected all $shipType's tiles to be sequential" }
+                    require(
+                        positions.dropLast(1).withIndex().all {
+                            it.value.y + 1 == positions[it.index + 1].y
+                        }
+                    ) {
+                        "Expected all $shipType's tiles to be sequential"
+                    }
 
-                    require(positions.all { it.x == positions[0].x }) { "Expected all $shipType's tiles to be vertical" }
+                    require(positions.all { it.x == positions[0].x }) {
+                        "Expected all $shipType's tiles to be vertical"
+                    }
                 }
-
-                else -> require(false) { "Expected $shipType tiles direction to be either horizontal or vertical" }
+                else ->
+                    require(false) {
+                        "Expected $shipType tiles direction to be either horizontal or vertical"
+                    }
             }
         }
     }
@@ -101,7 +129,7 @@ class BattleshipField(
     fun hasAliveShips(): Boolean = hits.size < BattleshipTilesToHitCount
 
     fun strikeAt(pos: BattleshipPos) {
-        require(pos.x in 0..<BattleshipFieldSize && pos.y in 0..<BattleshipFieldSize) {
+        require(pos.x in 0 ..< BattleshipFieldSize && pos.y in 0 ..< BattleshipFieldSize) {
             "Strike position is out of bounds: $pos"
         }
 
@@ -114,14 +142,15 @@ class BattleshipField(
     override fun toString(): String {
         val sb = StringBuilder()
 
-        for (y in 0..<BattleshipFieldSize) {
-            for (x in 0..<BattleshipFieldSize) {
+        for (y in 0 ..< BattleshipFieldSize) {
+            for (x in 0 ..< BattleshipFieldSize) {
                 val tile = field[y][x]
 
-                val char = when (tile) {
-                    is BattleshipShipTile -> tile.shipType.toConsoleView()
-                    is BattleshipEmptyTile -> "."
-                }
+                val char =
+                    when (tile) {
+                        is BattleshipShipTile -> tile.shipType.toConsoleView()
+                        is BattleshipEmptyTile -> "."
+                    }
 
                 sb.append(char)
             }

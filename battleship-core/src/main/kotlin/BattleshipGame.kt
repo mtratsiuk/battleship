@@ -1,15 +1,17 @@
 package dev.spris.battleship.core
 
 import java.util.*
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 import kotlin.reflect.typeOf
 
 @JvmInline
-value class BattleshipGameId(val id: String)
+value class BattleshipGameId(val id: String) {
+    override fun toString() = "GameId[$id]"
+}
 
 @JvmInline
-value class BattleshipPlayerId(val id: String)
+value class BattleshipPlayerId(val id: String) {
+    override fun toString() = "PlayerId[$id]"
+}
 
 sealed interface BattleshipAction
 
@@ -28,8 +30,11 @@ private data class BattleshipActionGameOver(
 ) : BattleshipAction
 
 sealed interface BattleshipState
+
 data class BattleshipStateAwaitingField(val playerId: BattleshipPlayerId) : BattleshipState
+
 data class BattleshipStateAwaitingStrike(val attackerId: BattleshipPlayerId) : BattleshipState
+
 data class BattleshipStateGameOver(val winnerId: BattleshipPlayerId) : BattleshipState
 
 class BattleshipGame(
@@ -37,11 +42,10 @@ class BattleshipGame(
     val player1Id: BattleshipPlayerId,
     val player2Id: BattleshipPlayerId,
 ) {
-    constructor(player1Id: BattleshipPlayerId, player2Id: BattleshipPlayerId) : this(
-        BattleshipGameId(UUID.randomUUID().toString()),
-        player1Id,
-        player2Id
-    )
+    constructor(
+        player1Id: BattleshipPlayerId,
+        player2Id: BattleshipPlayerId
+    ) : this(BattleshipGameId(UUID.randomUUID().toString()), player1Id, player2Id)
 
     lateinit var player1Field: BattleshipField
     lateinit var player2Field: BattleshipField
@@ -49,8 +53,6 @@ class BattleshipGame(
     var state: BattleshipState = BattleshipStateAwaitingField(player1Id)
 
     fun accept(action: BattleshipAction) {
-        println("$gameId: $action")
-
         when (action) {
             is BattleshipActionField -> {
                 assertState<BattleshipStateAwaitingField> { state ->
@@ -61,19 +63,21 @@ class BattleshipGame(
 
                 when (action.playerId) {
                     player1Id -> {
-                        require(!::player1Field.isInitialized) { "Field for player1[$player1Id] was already provided" }
+                        require(!::player1Field.isInitialized) {
+                            "Field for player1[$player1Id] was already provided"
+                        }
                         player1Field = action.field
                         state = BattleshipStateAwaitingField(player2Id)
                     }
-
                     player2Id -> {
-                        require(!::player2Field.isInitialized) { "Field for player2[$player2Id] was already provided" }
+                        require(!::player2Field.isInitialized) {
+                            "Field for player2[$player2Id] was already provided"
+                        }
                         player2Field = action.field
                         state = BattleshipStateAwaitingStrike(player1Id)
                     }
                 }
             }
-
             is BattleshipActionStrike -> {
                 assertState<BattleshipStateAwaitingStrike> { state ->
                     require(state.attackerId == action.attackerId) {
@@ -93,7 +97,6 @@ class BattleshipGame(
                     accept(BattleshipActionGameOver(action.attackerId))
                 }
             }
-
             is BattleshipActionGameOver -> {
                 assertState<BattleshipStateGameOver> { state ->
                     require(state.winnerId == action.winnerId) {
@@ -104,9 +107,11 @@ class BattleshipGame(
         }
     }
 
-    fun otherPlayerId(playerId: BattleshipPlayerId) = if (playerId == player1Id) player2Id else player1Id
+    fun otherPlayerId(playerId: BattleshipPlayerId) =
+        if (playerId == player1Id) player2Id else player1Id
 
-    fun playerField(playerId: BattleshipPlayerId) = if (playerId == player1Id) player1Field else player2Field
+    fun playerField(playerId: BattleshipPlayerId) =
+        if (playerId == player1Id) player1Field else player2Field
 
     private inline fun <reified T : BattleshipState> assertState(assertPlayerId: (T) -> Unit) {
         require(state is T) { "Expected current game state to be ${typeOf<T>()}, got $state" }

@@ -1,7 +1,6 @@
 import dev.spris.battleship.core.*
-import org.junit.jupiter.api.Test
-
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class BattleshipGameTest {
 
@@ -21,8 +20,8 @@ class BattleshipGameTest {
         assertEquals(game.state, BattleshipStateAwaitingField(player2Id))
         game.accept(BattleshipActionField(player2Id, player2Field))
 
-        for (y in 0..<player2Field.field.size) {
-            for (x in 0..<player2Field.field.size) {
+        for (y in 0 ..< player2Field.field.size) {
+            for (x in 0 ..< player2Field.field.size) {
                 if (player2Field.field[y][x] is BattleshipShipTile) {
                     // Player 1 strikes ship tiles
                     assertEquals(game.state, BattleshipStateAwaitingStrike(player1Id))

@@ -1,9 +1,9 @@
 package dev.spris.battleship.server.repository
 
 import dev.spris.battleship.core.BattleshipPlayerId
-import org.springframework.stereotype.Repository
-import java.util.UUID
+import dev.spris.battleship.server.service.IdGenerator
 import java.util.concurrent.ConcurrentHashMap
+import org.springframework.stereotype.Repository
 
 data class Player(
     val id: BattleshipPlayerId,
@@ -12,7 +12,10 @@ data class Player(
 )
 
 interface PlayerRepository {
-    suspend fun create(addr: String, name: String): Player
+    suspend fun create(
+        addr: String,
+        name: String,
+    ): Player
 
     suspend fun findAll(): List<Player>
 
@@ -20,17 +23,21 @@ interface PlayerRepository {
 }
 
 @Repository
-class InMemoryPlayerRepository : PlayerRepository {
+class InMemoryPlayerRepository(
+    private val idGenerator: IdGenerator,
+) : PlayerRepository {
     private val players = ConcurrentHashMap<BattleshipPlayerId, Player>()
 
-    override suspend fun create(addr: String, name: String): Player {
-        require(!players.any { it.value.name == name }) { "Name $name is already taken" }
-
-        val player = Player(
-            id = BattleshipPlayerId(UUID.randomUUID().toString()),
-            addr=addr,
-            name=name,
-        )
+    override suspend fun create(
+        addr: String,
+        name: String,
+    ): Player {
+        val player =
+            Player(
+                id = BattleshipPlayerId(idGenerator.next()),
+                addr = addr,
+                name = name,
+            )
 
         players[player.id] = player
         return player
