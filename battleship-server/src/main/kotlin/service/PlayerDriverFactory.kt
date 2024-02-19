@@ -61,7 +61,7 @@ class InProcessRandomPlayerDriver(
         ownField: BattleshipField,
         otherField: BattleshipField,
     ): BattleshipPos {
-        delay(50)
+        delay(10)
 
         return BattleshipPos(
             Random.nextInt(otherField.field.size),

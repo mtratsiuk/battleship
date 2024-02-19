@@ -48,12 +48,6 @@ class GameRunner(
         player1: Player,
         player2: Player,
     ) {
-        val players =
-            mapOf(
-                player1.id to playerDriverFactory.create(player1),
-                player2.id to playerDriverFactory.create(player2),
-            )
-
         val game =
             BattleshipGame(
                 BattleshipGameId(idGenerator.next()),
@@ -62,6 +56,35 @@ class GameRunner(
             )
 
         logger.info { "Game ${game.gameId} started: $player1 vs $player2" }
+
+        try {
+            runGameLoop(game, player1, player2)
+        } catch (e: Exception) {
+            game.log.append(BattleshipGameLogErrorEntry(e))
+        }
+
+        if (game.state !is BattleshipStateGameOver) {
+            logger.info { "Game ${game.gameId} was taking too long, aborted" }
+            game.log.append(
+                BattleshipGameLogErrorEntry(Exception("Game was taking too long, aborted"))
+            )
+        } else {
+            logger.info { "Game ${game.gameId} finished: $player1 vs $player2" }
+        }
+
+        // TODO: Save game log to game history
+    }
+
+    private suspend fun runGameLoop(
+        game: BattleshipGame,
+        player1: Player,
+        player2: Player,
+    ) {
+        val players =
+            mapOf(
+                player1.id to playerDriverFactory.create(player1),
+                player2.id to playerDriverFactory.create(player2),
+            )
 
         for (turn in 0..GAME_TURNS_LIMIT) {
             when (val state = game.state) {
@@ -82,13 +105,5 @@ class GameRunner(
                 is BattleshipStateGameOver -> break
             }
         }
-
-        // TODO: Save game log to game history
-
-        if (game.state !is BattleshipStateGameOver) {
-            throw IllegalStateException("Game is taking too long to finish, aborted")
-        }
-
-        logger.info { "Game ${game.gameId} finished: $player1 vs $player2" }
     }
 }

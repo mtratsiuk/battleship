@@ -47,12 +47,16 @@ class BattleshipGame(
         player2Id: BattleshipPlayerId
     ) : this(BattleshipGameId(UUID.randomUUID().toString()), player1Id, player2Id)
 
+    val log = BattleshipGameLog()
+
     lateinit var player1Field: BattleshipField
     lateinit var player2Field: BattleshipField
 
     var state: BattleshipState = BattleshipStateAwaitingField(player1Id)
 
     fun accept(action: BattleshipAction) {
+        log.append(BattleshipGameLogActionEntry(action))
+
         when (action) {
             is BattleshipActionField -> {
                 assertState<BattleshipStateAwaitingField> { state ->
