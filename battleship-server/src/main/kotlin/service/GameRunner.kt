@@ -1,6 +1,8 @@
 package dev.spris.battleship.server.service
 
 import dev.spris.battleship.core.*
+import dev.spris.battleship.server.repository.GameRepository
+import dev.spris.battleship.server.repository.GameState
 import dev.spris.battleship.server.repository.Player
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.annotation.PostConstruct
@@ -16,8 +18,8 @@ private val logger = KotlinLogging.logger {}
 
 @Service
 class GameRunner(
-    val playerDriverFactory: PlayerDriverFactory,
-    val idGenerator: IdGenerator,
+    private val playerDriverFactory: PlayerDriverFactory,
+    private val gameRepository: GameRepository,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val games = Channel<Pair<Player, Player>>(UNLIMITED)
@@ -48,13 +50,15 @@ class GameRunner(
         player1: Player,
         player2: Player,
     ) {
+        val dbGame = gameRepository.create(player1.id, player2.id)
         val game =
             BattleshipGame(
-                BattleshipGameId(idGenerator.next()),
+                dbGame.id,
                 player1.id,
                 player2.id,
             )
 
+        gameRepository.update(dbGame.copy(state = GameState.RUNNING))
         logger.info { "Game ${game.gameId} started: $player1 vs $player2" }
 
         try {
@@ -72,7 +76,7 @@ class GameRunner(
             logger.info { "Game ${game.gameId} finished: $player1 vs $player2" }
         }
 
-        // TODO: Save game log to game history
+        gameRepository.update(dbGame.copy(state = GameState.FINISHED, log = game.log))
     }
 
     private suspend fun runGameLoop(

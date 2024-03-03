@@ -7,11 +7,13 @@ data class BattleshipGameLogActionEntry(val action: BattleshipAction) : Battlesh
 data class BattleshipGameLogErrorEntry(val error: Exception) : BattleshipGameLogEntry
 
 class BattleshipGameLog {
-    private val log = mutableListOf<BattleshipGameLogEntry>()
+    private val entries = mutableListOf<BattleshipGameLogEntry>()
+
+    fun read() = listOf(entries)
 
     fun append(entry: BattleshipGameLogEntry) {
-        log.addLast(entry)
+        entries.addLast(entry)
     }
 
-    override fun toString() = "GameLog[${log.joinToString("\n")}]"
+    override fun toString() = "GameLog[${entries.joinToString("\n")}]"
 }
