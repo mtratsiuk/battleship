@@ -54,7 +54,7 @@ class InMemoryGameRepository(
     }
 
     override suspend fun update(game: Game): Game {
-        require(games.contains(game.id)) { "Game ${game.id} doesn't exist" }
+        require(games.containsKey(game.id)) { "Game ${game.id} doesn't exist" }
 
         games[game.id] = game
 

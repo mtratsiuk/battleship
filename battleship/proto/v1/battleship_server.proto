@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package battleship.proto.v1;
+
+service BattleshipServerService {
+  rpc JoinLobby(JoinLobbyRequest) returns (JoinLobbyResponse);
+}
+
+message JoinLobbyRequest {
+  string addr = 1;
+  string name = 2;
+}
+
+message JoinLobbyResponse {
+
+}
