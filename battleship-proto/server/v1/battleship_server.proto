@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package battleship.proto.server.v1;
+
+import "core/v1/battleship_core.proto";
+
+service BattleshipServerService {
+  rpc JoinLobby(JoinLobbyRequest) returns (JoinLobbyResponse);
+  rpc GetGames(GetGamesRequest) returns (GetGamesResponse);
+  rpc GetGame(GetGameRequest) returns (GetGameResponse);
+  rpc AddRandomBot(AddRandomBotRequest) returns (AddRandomBotResponse);
+}
+
+message JoinLobbyRequest {
+  string addr = 1;
+  string name = 2;
+}
+
+message JoinLobbyResponse {}
+
+message GetGamesRequest {}
+
+message GetGamesResponse {
+  repeated GetGamesResponseEntry games = 1;
+}
+
+message GetGamesResponseEntry {
+  string id = 1;
+  GameStateProto state = 2;
+  PlayerProto player_1 = 3;
+  PlayerProto player_2 = 4;
+  optional string winner_id = 5;
+}
+
+message GetGameRequest {
+  string id = 1;
+}
+
+message GetGameResponse {
+  GameProto game = 1;
+}
+
+message AddRandomBotRequest {}
+
+message AddRandomBotResponse {}
+
+message GameProto {
+  string id = 1;
+  PlayerProto player_1 = 2;
+  PlayerProto player_2 = 3;
+  GameStateProto state = 4;
+  repeated GameLogEntryProto log = 5;
+}
+
+message PlayerProto {
+  string id = 1;
+  string name = 2;
+}
+
+message GameLogEntryProto {
+  oneof action {
+    battleship.proto.core.v1.BattleshipActionFieldProto field = 1;
+    battleship.proto.core.v1.BattleshipActionStrikeProto strike = 2;
+    battleship.proto.core.v1.BattleshipActionGameOverProto game_over = 3;
+    string error = 4;
+  }
+}
+
+enum GameStateProto {
+  UNSPECIFIED = 0;
+  IDLE = 1;
+  RUNNING = 2;
+  FINISHED = 3;
+}

@@ -9,7 +9,20 @@ enum class BattleshipType(val size: Int) {
     SUBMARINE(3),
     DESTROYER(3),
     BATTLESHIP(4),
-    CARRIER(5)
+    CARRIER(5);
+
+    companion object {
+        fun fromConsoleView(view: String): BattleshipType {
+            return when (view) {
+                "P" -> PATROL_BOAT
+                "S" -> SUBMARINE
+                "D" -> DESTROYER
+                "B" -> BATTLESHIP
+                "C" -> CARRIER
+                else -> throw IllegalArgumentException("Unexpected console view: $view")
+            }
+        }
+    }
 }
 
 fun BattleshipType.toConsoleView(): String {
@@ -22,7 +35,16 @@ fun BattleshipType.toConsoleView(): String {
     }
 }
 
-sealed interface BattleshipTile
+sealed interface BattleshipTile {
+    companion object {
+        fun fromConsoleView(view: String): BattleshipTile {
+            return when (view) {
+                "." -> BattleshipEmptyTile
+                else -> BattleshipShipTile(BattleshipType.fromConsoleView(view))
+            }
+        }
+    }
+}
 
 data object BattleshipEmptyTile : BattleshipTile
 
@@ -38,6 +60,14 @@ class BattleshipField(
     val misses: MutableSet<BattleshipPos>,
 ) {
     companion object {
+        fun fieldArrayFromString(str: String): Array<Array<BattleshipTile>> {
+            return str.split("\n").map { line ->
+                Array(BattleshipFieldSize) {
+                    BattleshipTile.fromConsoleView(line[it].toString())
+                }
+            }.toTypedArray()
+        }
+
         fun fromShips(vararg ships: Pair<BattleshipType, List<BattleshipPos>>): BattleshipField {
             val field =
                 Array(BattleshipFieldSize) {
@@ -65,12 +95,12 @@ class BattleshipField(
 
         val ships = mutableMapOf<BattleshipType, List<BattleshipPos>>()
 
-        for (y in 0 ..< BattleshipFieldSize) {
+        for (y in 0..<BattleshipFieldSize) {
             require(field[y].size == BattleshipFieldSize) {
                 "Expected field columns count to be ${BattleshipFieldSize}, got ${field.size}"
             }
 
-            for (x in 0 ..< BattleshipFieldSize) {
+            for (x in 0..<BattleshipFieldSize) {
                 val tile = field[y][x]
 
                 if (tile is BattleshipShipTile) {
@@ -105,6 +135,7 @@ class BattleshipField(
                         "Expected all $shipType's tiles to be horizontal"
                     }
                 }
+
                 positions[0].y + 1 == positions[1].y -> {
                     require(
                         positions.dropLast(1).withIndex().all {
@@ -118,6 +149,7 @@ class BattleshipField(
                         "Expected all $shipType's tiles to be vertical"
                     }
                 }
+
                 else ->
                     require(false) {
                         "Expected $shipType tiles direction to be either horizontal or vertical"
@@ -129,7 +161,7 @@ class BattleshipField(
     fun hasAliveShips(): Boolean = hits.size < BattleshipTilesToHitCount
 
     fun strikeAt(pos: BattleshipPos) {
-        require(pos.x in 0 ..< BattleshipFieldSize && pos.y in 0 ..< BattleshipFieldSize) {
+        require(pos.x in 0..<BattleshipFieldSize && pos.y in 0..<BattleshipFieldSize) {
             "Strike position is out of bounds: $pos"
         }
 
@@ -142,8 +174,8 @@ class BattleshipField(
     override fun toString(): String {
         val sb = StringBuilder()
 
-        for (y in 0 ..< BattleshipFieldSize) {
-            for (x in 0 ..< BattleshipFieldSize) {
+        for (y in 0..<BattleshipFieldSize) {
+            for (x in 0..<BattleshipFieldSize) {
                 val tile = field[y][x]
 
                 val char =

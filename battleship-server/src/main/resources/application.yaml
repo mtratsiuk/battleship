@@ -1,0 +1,3 @@
+grpc:
+  server:
+    port: ${BATTLESHIP_SERVER_GRPC_PORT:6969}

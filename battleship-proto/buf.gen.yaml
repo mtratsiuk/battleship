@@ -6,18 +6,18 @@ managed:
     default: github.com/mtratsiuk/battleship/gen/proto/go
 plugins:
   - plugin: buf.build/protocolbuffers/kotlin
-    out: gen/proto/kotlin
+    out: ../gen/proto/kotlin
   - plugin: buf.build/grpc/kotlin:v1.4.1
-    out: gen/proto/kotlin
+    out: ../gen/proto/kotlin
   - plugin: buf.build/grpc/java
-    out: gen/proto/java
+    out: ../gen/proto/java
   - plugin: buf.build/protocolbuffers/java
-    out: gen/proto/java
+    out: ../gen/proto/java
   - plugin: buf.build/grpc/go:v1.3.0
-    out: gen/proto/go
+    out: ../gen/proto/go
     opt:
       - paths=source_relative
   - plugin: buf.build/protocolbuffers/go
-    out: gen/proto/go
+    out: ../gen/proto/go
     opt:
       - paths=source_relative

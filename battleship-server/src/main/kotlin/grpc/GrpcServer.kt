@@ -1,5 +1,6 @@
 package dev.spris.battleship.server.grpc
 
+import dev.spris.battleship.server.config.GrpcConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.grpc.protobuf.services.ProtoReflectionService
 import io.grpc.ServerBuilder
@@ -8,13 +9,15 @@ import jakarta.annotation.PreDestroy
 import org.springframework.stereotype.Component
 
 private val logger = KotlinLogging.logger {}
-private const val GRPC_PORT = 6969
 
 @Component
-class GrpcServer {
+class GrpcServer(
+    private final val config: GrpcConfig,
+    private final val grpcBattleshipServerService: GrpcBattleshipServerService,
+) {
     private val server = ServerBuilder
-        .forPort(GRPC_PORT)
-        .addService(GrpcBattleshipServerService())
+        .forPort(config.server.port)
+        .addService(grpcBattleshipServerService)
         .addService(ProtoReflectionService.newInstance())
         .build()
 
@@ -22,7 +25,7 @@ class GrpcServer {
     private fun init() {
         logger.info { "Starting grpc server" }
         server.start()
-        logger.info { "Grpc server listening on port $GRPC_PORT" }
+        logger.info { "Grpc server listening on port ${config.server.port}" }
     }
 
     @PreDestroy

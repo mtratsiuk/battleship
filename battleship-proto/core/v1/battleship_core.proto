@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package battleship.proto.core.v1;
+
+message BattleshipFieldProto {
+  string field = 1;
+  repeated BattleshipPosProto hits = 2;
+  repeated BattleshipPosProto misses = 3;
+}
+
+message BattleshipPosProto {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message BattleshipActionFieldProto {
+  string player_id = 1;
+  BattleshipFieldProto field = 2;
+}
+
+message BattleshipActionStrikeProto {
+  string attacker_id = 1;
+  BattleshipPosProto position = 2;
+}
+
+message BattleshipActionGameOverProto {
+  string winner_id = 1;
+}

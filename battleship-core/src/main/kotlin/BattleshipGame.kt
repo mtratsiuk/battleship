@@ -25,7 +25,7 @@ data class BattleshipActionStrike(
     val position: BattleshipPos,
 ) : BattleshipAction
 
-private data class BattleshipActionGameOver(
+data class BattleshipActionGameOver(
     val winnerId: BattleshipPlayerId,
 ) : BattleshipAction
 

@@ -27,6 +27,8 @@ interface GameRepository {
     suspend fun update(game: Game): Game
 
     suspend fun findById(gameId: BattleshipGameId): Game?
+
+    suspend fun findAll(): Collection<Game>
 }
 
 @Repository
@@ -63,5 +65,9 @@ class InMemoryGameRepository(
 
     override suspend fun findById(gameId: BattleshipGameId): Game? {
         return games[gameId]
+    }
+
+    override suspend fun findAll(): Collection<Game> {
+        return games.values
     }
 }
