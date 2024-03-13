@@ -21,14 +21,20 @@ class GameRunner(
     private val playerDriverFactory: PlayerDriverFactory,
     private val gameRepository: GameRepository,
 ) {
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val games = Channel<Pair<Player, Player>>(UNLIMITED)
 
     @PostConstruct
     private fun init() {
         scope.launch {
             for (game in games) {
-                launch { runGame(game.first, game.second) }
+                launch {
+                    try {
+                        runGame(game.first, game.second)
+                    } catch (e: Exception) {
+                        logger.error { "Exception while running game: $e" }
+                    }
+                }
             }
         }
     }

@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/jroimartin/gocui v0.5.0
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 )

@@ -12,6 +12,7 @@ import dev.spris.battleship.server.repository.PlayerRepository
 import dev.spris.battleship.server.service.GameLobby
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
+import java.util.concurrent.atomic.AtomicInteger
 
 private val logger = KotlinLogging.logger {}
 
@@ -21,6 +22,8 @@ class GrpcBattleshipServerService(
     private val gameRepository: GameRepository,
     private val playerRepository: PlayerRepository,
 ) : BattleshipServerServiceCoroutineImplBase() {
+    private var randomBotCounter = AtomicInteger(0)
+
     override suspend fun joinLobby(request: JoinLobbyRequest): JoinLobbyResponse {
         logger.info { "joinLobby: $request" }
 
@@ -77,7 +80,7 @@ class GrpcBattleshipServerService(
 
         val ps = listOf("Mighty", "Funny", "Clever", "Handsome", "Tiny", "Pink")
         val ss = listOf("Cat", "Puppy", "Parrot", "Pony", "Bear", "Mouse", "Snake")
-        val name = "${ps.random()} ${ss.random()}"
+        val name = "${ps.random()} ${ss.random()} ${randomBotCounter.incrementAndGet()}"
         val addr = "inprocess://$name"
 
         gameLobby.join(addr, name)
