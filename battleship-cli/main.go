@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/jroimartin/gocui"
+	core "github.com/mtratsiuk/battleship/battleship-go-core"
 	pbserver "github.com/mtratsiuk/battleship/gen/proto/go/server/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -42,13 +44,20 @@ type App struct {
 	err          string
 	games        []*pbserver.GetGamesResponseEntry
 	players      []AppPlayer
-	game         *pbserver.GameProto
+	gameRenderer *AppGameRenderer
 }
 
 type AppPlayer struct {
 	id   string
 	name string
 	wins int
+}
+
+type AppGameRenderer struct {
+	game        *pbserver.GameProto
+	fields      map[string]*core.BattleshipField
+	curEntryIdx int
+	cancel      func()
 }
 
 func NewApp() App {
@@ -119,7 +128,9 @@ func main() {
 		log.Panicln(err)
 	}
 
-	go app.Poll(g)
+	if err := g.SetKeybinding(VIEW_GAMES_LIST, gocui.KeyEnter, gocui.ModNone, app.FetchGame); err != nil {
+		log.Panicln(err)
+	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
@@ -220,6 +231,7 @@ func (app *App) HotKeysView(g *gocui.Gui) error {
 
 		fmt.Fprintf(v, "r: refresh games, ")
 		fmt.Fprintf(v, "a: add random bot, ")
+		fmt.Fprintf(v, "enter: view game log, ")
 		fmt.Fprintf(v, "ctrl+c / q: exit")
 	}
 
@@ -296,7 +308,79 @@ func (app *App) RenderPlayers(v *gocui.View) error {
 
 func (app *App) RenderGame(v *gocui.View) error {
 	v.Clear()
-	v.Title = "Game"
+
+	if app.gameRenderer == nil {
+		v.Title = "Game"
+		return nil
+	}
+
+	renderer := app.gameRenderer
+	game := renderer.game
+
+	v.Title = fmt.Sprintf("Game[%v]: %v vs %v", game.Id, game.Player_1.Name, game.Player_2.Name)
+
+	renderField := func(f *core.BattleshipField) string {
+		v := &strings.Builder{}
+
+		cmiss := color.New(color.BgBlue).Add(color.BgWhite)
+		cempty := color.New(color.BgBlue).Add(color.BgWhite)
+		chit := color.New(color.BgRed).Add(color.BgWhite)
+		cship := color.New(color.BgBlue).Add(color.BgWhite)
+
+		fmt.Fprint(v, "  ")
+		for y := range f.Field {
+			fmt.Fprintf(v, "%v ", y)
+		}
+		fmt.Fprintln(v)
+
+		for y, l := range f.Field {
+			fmt.Fprintf(v, "%v ", y)
+
+			for x, t := range l {
+				pos := core.BattleshipPos{X: x, Y: y}
+
+				if t.Kind == core.BattleshipTileKindEmpty {
+					if f.Misses.Has(pos) {
+						cmiss.Fprint(v, "o")
+					} else {
+						cempty.Fprint(v, ".")
+					}
+				} else {
+					if f.Hits.Has(pos) {
+						chit.Add(color.BgRed).Fprintf(v, string(t.Ship))
+					} else {
+						cship.Fprintf(v, string(t.Ship))
+					}
+				}
+
+				cempty.Fprint(v, " ")
+			}
+
+			cempty.Fprintln(v)
+		}
+
+		return v.String()
+	}
+
+	f1 := strings.Split(renderField(renderer.fields[game.Player_1.Id]), "\n")
+	f2 := strings.Split(renderField(renderer.fields[game.Player_2.Id]), "\n")
+
+	pad := strings.Repeat(" ", 16)
+
+	fmt.Fprintln(v)
+	fmt.Fprintln(v)
+	fmt.Fprintf(v, " %v", game.GetLog()[min(len(game.GetLog()) - 1, renderer.curEntryIdx)])
+
+	fmt.Fprintln(v)
+	fmt.Fprintln(v)
+
+	for i := range f1 {
+		fmt.Fprintf(v, " %v%v%v ", f1[i], pad, f2[i])
+		fmt.Fprintln(v)
+	}
+
+	fmt.Fprintf(v, " %-38v", game.Player_1.Name)
+	fmt.Fprintf(v, "%v", game.Player_2.Name)
 
 	return nil
 }
@@ -328,6 +412,12 @@ func (app *App) ReRender(g *gocui.Gui) error {
 		return err
 	}
 	app.RenderErrors(v)
+
+	v, err = g.View(VIEW_GAME)
+	if err != nil {
+		return err
+	}
+	app.RenderGame(v)
 
 	return nil
 }
@@ -363,6 +453,43 @@ func (app *App) AddRandomBot(g *gocui.Gui, v *gocui.View) error {
 	}
 
 	return app.RefreshGames(g, v)
+}
+
+func (app *App) FetchGame(g *gocui.Gui, v *gocui.View) error {
+	if len(app.games) == 0 {
+		app.err = "can't select a game"
+		return app.ReRender(g)
+	}
+
+	game := app.games[app.curGameIdx]
+
+	if game.State != pbserver.GameStateProto_FINISHED {
+		app.err = "game is not finished yet"
+		return app.ReRender(g)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	response, err := app.client.GetGame(ctx, &pbserver.GetGameRequest{Id: game.Id})
+	if err != nil {
+		app.err = err.Error()
+	} else {
+		if app.gameRenderer != nil {
+			app.gameRenderer.cancel()
+		}
+
+		r, err := app.NewAppGameRenderer(g, response)
+
+		if err != nil {
+			return err
+		}
+
+		app.err = ""
+		app.gameRenderer = r
+	}
+
+	return app.ReRender(g)
 }
 
 func (app *App) HandleArrowDown(g *gocui.Gui, v *gocui.View) error {
@@ -401,15 +528,6 @@ func (app *App) CreateFocusViewHandler(name string) func(g *gocui.Gui, v *gocui.
 	}
 }
 
-func (app *App) Poll(g *gocui.Gui) {
-	for {
-		time.Sleep(time.Second)
-		g.Update(func(g *gocui.Gui) error {
-			return app.RefreshGames(g, g.CurrentView())
-		})
-	}
-}
-
 func (app *App) SetGames(gamesResponse *pbserver.GetGamesResponse) {
 	app.games = gamesResponse.Games
 
@@ -443,4 +561,78 @@ func (app *App) SetGames(gamesResponse *pbserver.GetGamesResponse) {
 	slices.SortFunc(playersList, func(a, b AppPlayer) int { return b.wins - a.wins })
 
 	app.players = playersList
+}
+
+func (app *App) NewAppGameRenderer(g *gocui.Gui, p *pbserver.GetGameResponse) (*AppGameRenderer, error) {
+	gr := &AppGameRenderer{}
+	gr.game = p.Game
+	gr.fields = make(map[string]*core.BattleshipField, 2)
+	gr.curEntryIdx = 2
+
+	p1id, field1, err := ExtractField(gr.game.Log[0])
+	if err != nil {
+		return gr, err
+	}
+	gr.fields[p1id] = &field1
+
+	p2id, field2, err := ExtractField(gr.game.Log[1])
+	if err != nil {
+		return gr, err
+	}
+	gr.fields[p2id] = &field2
+
+	ctx, cancel := context.WithCancel(context.Background())
+	gr.cancel = cancel
+
+	otherId := func(id string) string {
+		if id == p1id {
+			return p2id
+		}
+		return p1id
+	}
+
+	go func() {
+		for gr.curEntryIdx < len(gr.game.Log) {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				entry := gr.game.Log[gr.curEntryIdx]
+
+				switch entry.GetAction().(type) {
+				case *pbserver.GameLogEntryProto_Strike:
+					strike := entry.GetStrike()
+					gr.fields[otherId(strike.AttackerId)].Strike(core.NewBattleshipPosFromProto(strike.Position))
+				default:
+					// noop
+				}
+
+				gr.curEntryIdx += 1
+				time.Sleep(time.Second / 2)
+
+				g.Update(func(g *gocui.Gui) error {
+					app.ReRender(g)
+					return nil
+				})
+			}
+		}
+	}()
+
+	return gr, nil
+}
+
+func ExtractField(p *pbserver.GameLogEntryProto) (string, core.BattleshipField, error) {
+	field := p.GetField()
+
+	if field == nil {
+		return "", core.BattleshipField{}, fmt.Errorf("expected provided game log entry to be a field")
+	}
+
+	f, err := core.NewBattleshipFieldFromProto(field.Field)
+
+	if err != nil {
+		return "", core.BattleshipField{}, err
+	}
+
+	return field.PlayerId, f, nil
 }
