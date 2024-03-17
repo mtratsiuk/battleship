@@ -11,8 +11,8 @@ import dev.spris.battleship.server.repository.GameState
 import dev.spris.battleship.server.repository.PlayerRepository
 import dev.spris.battleship.server.service.GameLobby
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicInteger
+import org.springframework.stereotype.Component
 
 private val logger = KotlinLogging.logger {}
 
@@ -36,22 +36,19 @@ class GrpcBattleshipServerService(
         logger.info { "getGames: $request" }
 
         val players = playerRepository.findAll().associateBy { it.id }
-        val gs = gameRepository.findAll().map { g ->
-            getGamesResponseEntry {
-                id = g.id.id
-                state = g.state.toProto()
-                player1 = players[g.player1Id]!!.toProto()
-                player2 = players[g.player2Id]!!.toProto()
+        val gs =
+            gameRepository.findAll().map { g ->
+                getGamesResponseEntry {
+                    id = g.id.id
+                    state = g.state.toProto()
+                    player1 = players[g.player1Id]!!.toProto()
+                    player2 = players[g.player2Id]!!.toProto()
 
-                g.maybeWinnerId()?.let {
-                    winnerId = it
+                    g.maybeWinnerId()?.let { winnerId = it }
                 }
             }
-        }
 
-        return getGamesResponse {
-            games.addAll(gs)
-        }
+        return getGamesResponse { games.addAll(gs) }
     }
 
     override suspend fun getGame(request: GetGameRequest): GetGameResponse {
@@ -85,7 +82,7 @@ class GrpcBattleshipServerService(
 
         gameLobby.join(addr, name)
 
-        return addRandomBotResponse { }
+        return addRandomBotResponse {}
     }
 }
 

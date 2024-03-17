@@ -5,13 +5,13 @@ managed:
   go_package_prefix:
     default: github.com/mtratsiuk/battleship/gen/proto/go
 plugins:
-  - plugin: buf.build/protocolbuffers/kotlin
+  - plugin: buf.build/protocolbuffers/kotlin:v25.3
     out: ../gen/proto/kotlin
   - plugin: buf.build/grpc/kotlin:v1.4.1
     out: ../gen/proto/kotlin
   - plugin: buf.build/grpc/java
     out: ../gen/proto/java
-  - plugin: buf.build/protocolbuffers/java
+  - plugin: buf.build/protocolbuffers/java:v25.3
     out: ../gen/proto/java
   - plugin: buf.build/grpc/go:v1.3.0
     out: ../gen/proto/go

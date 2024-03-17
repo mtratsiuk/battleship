@@ -15,20 +15,22 @@ class GrpcServer(
     private final val config: GrpcConfig,
     private final val grpcBattleshipServerService: GrpcBattleshipServerService,
 ) {
-    private val server = ServerBuilder
-        .forPort(config.server.port)
-        .addService(grpcBattleshipServerService)
-        .addService(ProtoReflectionService.newInstance())
-        .intercept(object : ServerInterceptor {
-            override fun <ReqT : Any, RespT : Any> interceptCall(
-                call: ServerCall<ReqT, RespT>,
-                headers: Metadata,
-                next: ServerCallHandler<ReqT, RespT>
-            ): ServerCall.Listener<ReqT> {
-                return next.startCall(ExceptionTranslatingServerCall(call), headers)
-            }
-        })
-        .build()
+    private val server =
+        ServerBuilder.forPort(config.server.port)
+            .addService(grpcBattleshipServerService)
+            .addService(ProtoReflectionService.newInstance())
+            .intercept(
+                object : ServerInterceptor {
+                    override fun <ReqT : Any, RespT : Any> interceptCall(
+                        call: ServerCall<ReqT, RespT>,
+                        headers: Metadata,
+                        next: ServerCallHandler<ReqT, RespT>
+                    ): ServerCall.Listener<ReqT> {
+                        return next.startCall(ExceptionTranslatingServerCall(call), headers)
+                    }
+                }
+            )
+            .build()
 
     @PostConstruct
     private fun init() {
@@ -44,9 +46,8 @@ class GrpcServer(
         logger.info { "Grpc server shut down" }
     }
 
-    private class ExceptionTranslatingServerCall<ReqT, RespT>(
-        delegate: ServerCall<ReqT, RespT>
-    ) : ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT>(delegate) {
+    private class ExceptionTranslatingServerCall<ReqT, RespT>(delegate: ServerCall<ReqT, RespT>) :
+        ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT>(delegate) {
         override fun close(status: Status, trailers: Metadata) {
             if (status.isOk) {
                 return super.close(status, trailers)

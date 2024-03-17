@@ -61,11 +61,13 @@ class BattleshipField(
 ) {
     companion object {
         fun fieldArrayFromString(str: String): Array<Array<BattleshipTile>> {
-            return str.split("\n").map { line ->
-                Array(BattleshipFieldSize) {
-                    BattleshipTile.fromConsoleView(line[it].toString())
+            return str.split("\n")
+                .map { line ->
+                    Array(BattleshipFieldSize) {
+                        BattleshipTile.fromConsoleView(line[it].toString())
+                    }
                 }
-            }.toTypedArray()
+                .toTypedArray()
         }
 
         fun fromShips(vararg ships: Pair<BattleshipType, List<BattleshipPos>>): BattleshipField {
@@ -95,12 +97,12 @@ class BattleshipField(
 
         val ships = mutableMapOf<BattleshipType, List<BattleshipPos>>()
 
-        for (y in 0..<BattleshipFieldSize) {
+        for (y in 0 ..< BattleshipFieldSize) {
             require(field[y].size == BattleshipFieldSize) {
                 "Expected field columns count to be ${BattleshipFieldSize}, got ${field.size}"
             }
 
-            for (x in 0..<BattleshipFieldSize) {
+            for (x in 0 ..< BattleshipFieldSize) {
                 val tile = field[y][x]
 
                 if (tile is BattleshipShipTile) {
@@ -135,7 +137,6 @@ class BattleshipField(
                         "Expected all $shipType's tiles to be horizontal"
                     }
                 }
-
                 positions[0].y + 1 == positions[1].y -> {
                     require(
                         positions.dropLast(1).withIndex().all {
@@ -149,7 +150,6 @@ class BattleshipField(
                         "Expected all $shipType's tiles to be vertical"
                     }
                 }
-
                 else ->
                     require(false) {
                         "Expected $shipType tiles direction to be either horizontal or vertical"
@@ -161,7 +161,7 @@ class BattleshipField(
     fun hasAliveShips(): Boolean = hits.size < BattleshipTilesToHitCount
 
     fun strikeAt(pos: BattleshipPos) {
-        require(pos.x in 0..<BattleshipFieldSize && pos.y in 0..<BattleshipFieldSize) {
+        require(pos.x in 0 ..< BattleshipFieldSize && pos.y in 0 ..< BattleshipFieldSize) {
             "Strike position is out of bounds: $pos"
         }
 
@@ -174,8 +174,8 @@ class BattleshipField(
     override fun toString(): String {
         val sb = StringBuilder()
 
-        for (y in 0..<BattleshipFieldSize) {
-            for (x in 0..<BattleshipFieldSize) {
+        for (y in 0 ..< BattleshipFieldSize) {
+            for (x in 0 ..< BattleshipFieldSize) {
                 val tile = field[y][x]
 
                 val char =

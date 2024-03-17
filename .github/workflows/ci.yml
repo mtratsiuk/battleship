@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+
+    # Setup docker builder image
+    - name: Docker builder cache
+      id: docker-builder-cache
+      uses: actions/cache@v3
+      with:
+        path: docker-builder-cache
+        key: ${{ runner.os }}-docker-builder-cache-${{ hashFiles('Dockerfile') }}
+
+    - name: Build docker builder image
+      if: steps.docker-builder-cache.outputs.cache-hit != 'true'
+      run: ./bin/build-docker-builder.sh && ./bin/save-docker-builder.sh > docker-builder-cache
+
+    - name: Load docker builder image
+      if: steps.docker-builder-cache.outputs.cache-hit == 'true'
+      run: docker load < docker-builder-cache
+
+
+    # Build source code
+    - name: Build source code
+      run: ./bin/docker-run.sh ./bin/build.sh
+
+
+    # Lint & test source code
+    - name: Lint source code
+      run: ./bin/docker-run.sh ./bin/test.sh
+

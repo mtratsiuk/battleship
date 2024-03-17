@@ -369,7 +369,7 @@ func (app *App) RenderGame(v *gocui.View) error {
 
 	fmt.Fprintln(v)
 	fmt.Fprintln(v)
-	fmt.Fprintf(v, " %v", game.GetLog()[min(len(game.GetLog()) - 1, renderer.curEntryIdx)])
+	fmt.Fprintf(v, " %v", game.GetLog()[min(len(game.GetLog())-1, renderer.curEntryIdx)])
 
 	fmt.Fprintln(v)
 	fmt.Fprintln(v)
