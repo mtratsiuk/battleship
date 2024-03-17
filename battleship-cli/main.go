@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -62,7 +63,18 @@ type AppGameRenderer struct {
 
 func NewApp() App {
 	cfg := AppConfig{}
-	cfg.ServerGrpcUrl = "localhost:6969"
+
+	grpcHost := os.Getenv("BATTLESHIP_SERVER_GRPC_HOST")
+	if grpcHost == "" {
+		grpcHost = "localhost"
+	}
+
+	grpcPort := os.Getenv("BATTLESHIP_SERVER_GRPC_PORT")
+	if grpcPort == "" {
+		grpcPort = "6969"
+	}
+
+	cfg.ServerGrpcUrl = fmt.Sprintf("%v:%v", grpcHost, grpcPort)
 
 	app := App{}
 	app.cfg = cfg

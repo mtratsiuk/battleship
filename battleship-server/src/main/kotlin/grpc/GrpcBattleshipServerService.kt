@@ -78,7 +78,7 @@ class GrpcBattleshipServerService(
         val ps = listOf("Mighty", "Funny", "Clever", "Handsome", "Tiny", "Pink")
         val ss = listOf("Cat", "Puppy", "Parrot", "Pony", "Bear", "Mouse", "Snake")
         val name = "${ps.random()} ${ss.random()} ${randomBotCounter.incrementAndGet()}"
-        val addr = "inprocess://$name"
+        val addr = "inprocess-bot://$name"
 
         gameLobby.join(addr, name)
 

@@ -3,9 +3,11 @@ package dev.spris.battleship.server.grpc
 import dev.spris.battleship.server.config.GrpcConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.grpc.*
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder
 import io.grpc.protobuf.services.ProtoReflectionService
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
+import java.net.InetSocketAddress
 import org.springframework.stereotype.Component
 
 private val logger = KotlinLogging.logger {}
@@ -16,7 +18,7 @@ class GrpcServer(
     private final val grpcBattleshipServerService: GrpcBattleshipServerService,
 ) {
     private val server =
-        ServerBuilder.forPort(config.server.port)
+        NettyServerBuilder.forAddress(InetSocketAddress(config.server.host, config.server.port))
             .addService(grpcBattleshipServerService)
             .addService(ProtoReflectionService.newInstance())
             .intercept(

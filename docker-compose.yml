@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+
+  battleship-server:
+    image: battleship-server:latest
+    restart: unless-stopped
+    environment:
+      - BATTLESHIP_SERVER_GRPC_HOST=${BATTLESHIP_SERVER_GRPC_HOST:-0.0.0.0}
+      - BATTLESHIP_SERVER_GRPC_PORT=${BATTLESHIP_SERVER_GRPC_PORT:-6969}
+    build:
+      context: ./
+      dockerfile: ./battleship-server/Dockerfile
+    ports:
+      - ${BATTLESHIP_SERVER_GRPC_PORT:-6969}:${BATTLESHIP_SERVER_GRPC_PORT:-6969}
+
+  battleship-cli:
+    image: battleship-cli:latest
+    build:
+      context: ./
+      dockerfile: ./battleship-cli/Dockerfile
+      args:
+        - BATTLESHIP_SERVER_GRPC_HOST=localhost
+        - BATTLESHIP_SERVER_GRPC_PORT=${BATTLESHIP_SERVER_GRPC_PORT:-6969}
+    entrypoint: ["echo", "battleship-cli is ready. You can run it via docker using: 'docker run -it --network host battleship-cli /bin/bash'"]

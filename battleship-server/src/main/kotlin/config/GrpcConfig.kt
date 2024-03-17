@@ -8,5 +8,6 @@ data class GrpcConfig(
 ) {
     data class GrpcServer(
         val port: Int,
+        val host: String,
     )
 }
