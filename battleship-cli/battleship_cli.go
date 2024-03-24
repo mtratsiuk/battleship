@@ -600,7 +600,7 @@ func (app *App) NewAppGameRenderer(g *gocui.Gui, p *pbserver.GetGameResponse) (*
 				}
 
 				gr.curEntryIdx += 1
-				time.Sleep(time.Second / 2)
+				time.Sleep(time.Millisecond * 100)
 
 				g.Update(func(g *gocui.Gui) error {
 					app.ReRender(g)

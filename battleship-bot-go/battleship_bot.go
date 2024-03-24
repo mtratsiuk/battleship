@@ -37,7 +37,9 @@ func main() {
 		Name: botServer.config.botName,
 	}
 
-	botServer.logger.Info(fmt.Sprintf("joining lobby: %v", request))
+	botServer.logger.Info(fmt.Sprintf("joining lobby with a delay... %v", request))
+
+	time.Sleep(time.Second * 5)
 	resp, err := (*client).JoinLobby(ctx, request)
 	if err != nil {
 		botServer.logger.Error(fmt.Sprintf("failed to join lobby: %v", err))

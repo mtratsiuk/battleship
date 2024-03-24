@@ -71,7 +71,8 @@ fun BattleshipFieldProto.toDomain(): BattleshipField {
     )
 }
 
-fun BattleshipPosProto.toDomain() = BattleshipPos(
-    x = this.x,
-    y = this.y,
-)
+fun BattleshipPosProto.toDomain() =
+    BattleshipPos(
+        x = this.x,
+        y = this.y,
+    )

@@ -162,16 +162,8 @@ func (b *BattleshipField) Strike(pos BattleshipPos) {
 }
 
 func NewBattleshipServerServiceClient() (*pbserver.BattleshipServerServiceClient, func(), error) {
-	grpcHost := os.Getenv("BATTLESHIP_SERVER_GRPC_HOST")
-	if grpcHost == "" {
-		grpcHost = "localhost"
-	}
-
-	grpcPort := os.Getenv("BATTLESHIP_SERVER_GRPC_PORT")
-	if grpcPort == "" {
-		grpcPort = "6969"
-	}
-
+	grpcHost := EnvOr("BATTLESHIP_SERVER_GRPC_HOST", "localhost")
+	grpcPort := EnvOr("BATTLESHIP_SERVER_GRPC_PORT", "6969")
 	serverGrpcUrl := fmt.Sprintf("%v:%v", grpcHost, grpcPort)
 
 	conn, err := grpc.Dial(serverGrpcUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))

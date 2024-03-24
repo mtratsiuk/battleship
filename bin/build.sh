@@ -9,7 +9,7 @@ echo "Building proto..."
 
 
 echo "Building go code..."
-go build -o ./battleship-cli/dist ./battleship-cli/main.go
+go build -o ./battleship-cli/dist ./battleship-cli/battleship_cli.go
 
 
 echo "Building kotlin code..."

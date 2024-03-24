@@ -14,6 +14,23 @@ services:
     ports:
       - ${BATTLESHIP_SERVER_GRPC_PORT:-6969}:${BATTLESHIP_SERVER_GRPC_PORT:-6969}
 
+  battleship-bot-go:
+    image: battleship-bot-go:latest
+    environment:
+      - BATTLESHIP_BOT_GO_GRPC_HOST=${BATTLESHIP_BOT_GO_GRPC_HOST:-0.0.0.0}
+      - BATTLESHIP_BOT_GO_GRPC_PORT=${BATTLESHIP_BOT_GO_GRPC_PORT:-6968}
+      - BATTLESHIP_BOT_GO_EXTERNAL_ADDR=${BATTLESHIP_BOT_GO_EXTERNAL_ADDR:-battleship-bot-go:6968}
+      - BATTLESHIP_BOT_GO_NAME=${BATTLESHIP_BOT_GO_NAME:-Go Bot}
+      - BATTLESHIP_SERVER_GRPC_HOST=${BATTLESHIP_SERVER_GRPC_HOST:-battleship-server}
+      - BATTLESHIP_SERVER_GRPC_PORT=${BATTLESHIP_SERVER_GRPC_PORT:-6969}
+    build:
+      context: ./
+      dockerfile: ./battleship-bot-go/Dockerfile
+    ports:
+      - ${BATTLESHIP_BOT_GO_GRPC_PORT:-6968}:${BATTLESHIP_BOT_GO_GRPC_PORT:-6968}
+    depends_on:
+      - battleship-server
+
   battleship-cli:
     image: battleship-cli:latest
     build:

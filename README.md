@@ -16,10 +16,10 @@ docker compose build
 ### Start services
 
 ```sh
-docker compose up battleship-server -d
+docker compose up battleship-server battleship-bot-go -d
 ```
 
-### Run CLI
+### Run CLI in docker
 
 ```sh
 docker run -it --network host battleship-cli /bin/bash
@@ -41,6 +41,12 @@ Check builder [Dockerfile](./Dockerfile) for up-to-date list of dependencies.
 
 ```sh
 ./gradlew bootRun
+```
+
+### Run go bot
+
+```sh
+go run ./battleship-bot-go
 ```
 
 ### Run CLI

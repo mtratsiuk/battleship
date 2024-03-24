@@ -6,7 +6,6 @@ import dev.spris.battleship.core.*
 import dev.spris.battleship.proto.bot.v1.BattleshipBotServiceGrpcKt
 import dev.spris.battleship.proto.bot.v1.getFieldRequest
 import dev.spris.battleship.proto.bot.v1.getStrikeRequest
-import dev.spris.battleship.server.config.GrpcConfig
 import dev.spris.battleship.server.grpc.toDomain
 import dev.spris.battleship.server.grpc.toOtherFieldProto
 import dev.spris.battleship.server.grpc.toProto
@@ -18,8 +17,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class PlayerDriverFactory {
-    private val grpcPlayers = CacheBuilder.newBuilder()
-        .build<Player, GrpcPlayerDriver>(CacheLoader.from { player -> GrpcPlayerDriver(player) })
+    private val grpcPlayers =
+        CacheBuilder.newBuilder()
+            .build<Player, GrpcPlayerDriver>(
+                CacheLoader.from { player -> GrpcPlayerDriver(player) }
+            )
 
     suspend fun create(player: Player): PlayerDriver {
         if (player.addr.startsWith("inprocess")) {
@@ -43,10 +45,7 @@ interface PlayerDriver {
 class GrpcPlayerDriver(
     player: Player,
 ) : PlayerDriver {
-    private val channel = ManagedChannelBuilder
-        .forTarget(player.addr)
-        .usePlaintext()
-        .build()
+    private val channel = ManagedChannelBuilder.forTarget(player.addr).usePlaintext().build()
 
     private val stub = BattleshipBotServiceGrpcKt.BattleshipBotServiceCoroutineStub(channel)
 
@@ -76,7 +75,6 @@ class GrpcPlayerDriver(
 
         return response.pos.toDomain()
     }
-
 }
 
 class InProcessRandomPlayerDriver(
@@ -88,24 +86,24 @@ class InProcessRandomPlayerDriver(
         return BattleshipField.fromShips(
             BattleshipType.PATROL_BOAT to listOf(BattleshipPos(0, 0), BattleshipPos(0, 1)),
             BattleshipType.SUBMARINE to
-                    listOf(BattleshipPos(1, 0), BattleshipPos(1, 1), BattleshipPos(1, 2)),
+                listOf(BattleshipPos(1, 0), BattleshipPos(1, 1), BattleshipPos(1, 2)),
             BattleshipType.DESTROYER to
-                    listOf(BattleshipPos(2, 0), BattleshipPos(2, 1), BattleshipPos(2, 2)),
+                listOf(BattleshipPos(2, 0), BattleshipPos(2, 1), BattleshipPos(2, 2)),
             BattleshipType.BATTLESHIP to
-                    listOf(
-                        BattleshipPos(3, 0),
-                        BattleshipPos(3, 1),
-                        BattleshipPos(3, 2),
-                        BattleshipPos(3, 3),
-                    ),
+                listOf(
+                    BattleshipPos(3, 0),
+                    BattleshipPos(3, 1),
+                    BattleshipPos(3, 2),
+                    BattleshipPos(3, 3),
+                ),
             BattleshipType.CARRIER to
-                    listOf(
-                        BattleshipPos(4, 0),
-                        BattleshipPos(4, 1),
-                        BattleshipPos(4, 2),
-                        BattleshipPos(4, 3),
-                        BattleshipPos(4, 4),
-                    ),
+                listOf(
+                    BattleshipPos(4, 0),
+                    BattleshipPos(4, 1),
+                    BattleshipPos(4, 2),
+                    BattleshipPos(4, 3),
+                    BattleshipPos(4, 4),
+                ),
         )
     }
 

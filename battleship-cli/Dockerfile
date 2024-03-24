@@ -7,7 +7,7 @@ COPY go.mod /battleship/go.mod
 COPY go.sum /battleship/go.sum
 
 RUN go mod download
-RUN go build -o /battleship/battleship-cli/dist ./battleship-cli/main.go
+RUN go build -o /battleship/battleship-cli/dist ./battleship-cli/battleship_cli.go
 
 FROM fedora:39
 
