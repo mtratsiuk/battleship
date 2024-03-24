@@ -70,6 +70,7 @@ class GameRunner(
         try {
             runGameLoop(game, player1, player2)
         } catch (e: Exception) {
+            logger.error(e) { "Game ${game.gameId} failed during game loop" }
             game.log.append(BattleshipGameLogErrorEntry(e))
         }
 

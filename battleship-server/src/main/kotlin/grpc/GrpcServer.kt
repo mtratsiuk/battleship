@@ -14,8 +14,8 @@ private val logger = KotlinLogging.logger {}
 
 @Component
 class GrpcServer(
-    private final val config: GrpcConfig,
-    private final val grpcBattleshipServerService: GrpcBattleshipServerService,
+    private val config: GrpcConfig,
+    private val grpcBattleshipServerService: GrpcBattleshipServerService,
 ) {
     private val server =
         NettyServerBuilder.forAddress(InetSocketAddress(config.server.host, config.server.port))

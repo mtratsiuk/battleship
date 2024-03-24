@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -14,8 +13,6 @@ import (
 	"github.com/jroimartin/gocui"
 	core "github.com/mtratsiuk/battleship/battleship-go-core"
 	pbserver "github.com/mtratsiuk/battleship/gen/proto/go/server/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -30,12 +27,7 @@ const (
 	VIEW_HOT_KEYS   = "hot-keys-view"
 )
 
-type AppConfig struct {
-	ServerGrpcUrl string
-}
-
 type App struct {
-	cfg    AppConfig
 	client pbserver.BattleshipServerServiceClient
 	close  func()
 
@@ -62,22 +54,8 @@ type AppGameRenderer struct {
 }
 
 func NewApp() App {
-	cfg := AppConfig{}
-
-	grpcHost := os.Getenv("BATTLESHIP_SERVER_GRPC_HOST")
-	if grpcHost == "" {
-		grpcHost = "localhost"
-	}
-
-	grpcPort := os.Getenv("BATTLESHIP_SERVER_GRPC_PORT")
-	if grpcPort == "" {
-		grpcPort = "6969"
-	}
-
-	cfg.ServerGrpcUrl = fmt.Sprintf("%v:%v", grpcHost, grpcPort)
 
 	app := App{}
-	app.cfg = cfg
 	app.games = make([]*pbserver.GetGamesResponseEntry, 0)
 	app.players = make([]AppPlayer, 0)
 	app.err = ""
@@ -85,13 +63,14 @@ func NewApp() App {
 	app.curGameIdx = 0
 	app.curPlayerIdx = 0
 
-	conn, err := grpc.Dial(cfg.ServerGrpcUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	client, close, err := core.NewBattleshipServerServiceClient()
+
 	if err != nil {
 		log.Panicln(err)
 	}
-	app.close = func() { conn.Close() }
 
-	app.client = pbserver.NewBattleshipServerServiceClient(conn)
+	app.close = func() { close() }
+	app.client = *client
 
 	return app
 }
@@ -494,7 +473,8 @@ func (app *App) FetchGame(g *gocui.Gui, v *gocui.View) error {
 		r, err := app.NewAppGameRenderer(g, response)
 
 		if err != nil {
-			return err
+			app.err = err.Error()
+			return app.ReRender(g)
 		}
 
 		app.err = ""
@@ -637,7 +617,7 @@ func ExtractField(p *pbserver.GameLogEntryProto) (string, core.BattleshipField, 
 	field := p.GetField()
 
 	if field == nil {
-		return "", core.BattleshipField{}, fmt.Errorf("expected provided game log entry to be a field")
+		return "", core.BattleshipField{}, fmt.Errorf("expected provided game log entry to be a field, but got: %v", p.GetAction())
 	}
 
 	f, err := core.NewBattleshipFieldFromProto(field.Field)

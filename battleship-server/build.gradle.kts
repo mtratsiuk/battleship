@@ -19,6 +19,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
 
+    implementation("com.google.guava:guava:33.1.0-jre")
+
     implementation("io.grpc:grpc-netty-shaded:1.62.2")
     implementation("io.grpc:grpc-kotlin-stub:1.4.1")
     implementation("io.grpc:grpc-protobuf:1.62.2")

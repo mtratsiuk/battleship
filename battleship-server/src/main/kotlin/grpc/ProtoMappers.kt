@@ -1,6 +1,7 @@
 package dev.spris.battleship.server.grpc
 
 import dev.spris.battleship.core.*
+import dev.spris.battleship.proto.bot.v1.battleshipOtherFieldProto
 import dev.spris.battleship.proto.core.v1.*
 import dev.spris.battleship.proto.server.v1.*
 import dev.spris.battleship.proto.server.v1.gameLogEntryProto
@@ -52,7 +53,25 @@ fun BattleshipField.toProto() = battleshipFieldProto {
     misses.addAll(this@toProto.misses.map { it.toProto() })
 }
 
+fun BattleshipField.toOtherFieldProto() = battleshipOtherFieldProto {
+    hits.addAll(this@toOtherFieldProto.hits.map { it.toProto() })
+    misses.addAll(this@toOtherFieldProto.misses.map { it.toProto() })
+}
+
 fun BattleshipPos.toProto() = battleshipPosProto {
     x = this@toProto.x
     y = this@toProto.y
 }
+
+fun BattleshipFieldProto.toDomain(): BattleshipField {
+    return BattleshipField(
+        field = BattleshipField.fieldArrayFromString(this.field),
+        hits = this.hitsList.map { it.toDomain() }.toMutableSet(),
+        misses = this.missesList.map { it.toDomain() }.toMutableSet(),
+    )
+}
+
+fun BattleshipPosProto.toDomain() = BattleshipPos(
+    x = this.x,
+    y = this.y,
+)
